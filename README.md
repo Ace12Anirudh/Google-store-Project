@@ -26,11 +26,9 @@ chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 ```
 
-## Install Docker & Git
+## Install Git
 
 ``` bash
-yum install docker -y
-systemctl start docker
 yum install git -y
 ```
 
@@ -40,7 +38,6 @@ yum install git -y
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
 kubectl get pods -n ingress-nginx
 kubectl get svc -n ingress-nginx
-kubectl get ingress -n google
 ```
 
 ## Install MariaDB
@@ -93,13 +90,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret   -o jsonpath="{.data.p
 
 # 📸 Architecture & Workflow Diagrams
 
-### Cluster Architecture
 
-``` bash
-Need to change the detils 
-```
-
-![Cluster Architecture](https://i.ibb.co/6R7ZN38f/image.png)
 
 ### Workflow Diagram
 
