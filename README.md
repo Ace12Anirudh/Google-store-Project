@@ -1,4 +1,4 @@
-# Kubernetes + + EKS-CTL
+# Kubernetes + EKS-CTL + monitoring
 
 This README provides end-to-end steps for installing **eksctl**,
 **kubectl**, **Docker**, **Ingress-Nginx**, **MariaDB**, **ArgoCD**, and
