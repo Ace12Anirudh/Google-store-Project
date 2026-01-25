@@ -13,7 +13,7 @@
 ## 📹 Project Demo
 **Watch the live deployment and walkthrough of the project:**
 
-[![Watch the video](googleproject-thumbnail.png)](https://drive.google.com/file/d/1k_RDfrIGPMhVNENQNejR8mn8NhDZ-_Ch/view?usp=drive_link)
+[![Watch the video](./assets/googleproject-thumbnail.png)](https://drive.google.com/file/d/1k_RDfrIGPMhVNENQNejR8mn8NhDZ-_Ch/view?usp=drive_link)
 
 *(Click the image above to watch the video)*
 
