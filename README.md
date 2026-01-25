@@ -131,9 +131,9 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 ## 📸 Screenshots
 
 | Store Interface | Grafana Dashboard |
-|:---:|:---:|
-| ![Store](./screenshots/store.png) | ![Grafana](./screenshots/grafana.png) |
-| *Home Page* | *Metrics Monitoring* |
+|:---:|:---:|:---:|
+| ![Store](./assets/google-store.png) | ![Grafana](./assets/google-grafana.png) | ![Kibana](./assets/google-kibana.png) |
+| *Home Page* | *Metrics Monitoring* | *Kibana Logs* |
 
 ---
 
