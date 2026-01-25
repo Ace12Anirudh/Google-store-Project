@@ -1,113 +1,144 @@
-# Kubernetes + EKS-CTL + monitoring
+# 🛍️ Google Store Microservices on AWS
 
-This README provides end-to-end steps for installing **eksctl**,
-**kubectl**, **Docker**, **Ingress-Nginx**, **MariaDB**, **ArgoCD**, and
-creating necessary namespaces and database tables.
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/kubernetes-326ce5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-EF7B4D?style=for-the-badge&logo=argo&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 
-## Install eksctl
+> **A scalable, cloud-native e-commerce platform replicating the Google Store experience. Deployed on AWS EKS using a complete DevSecOps pipeline with GitOps principles.**
 
-``` bash
-curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-sudo mv /tmp/eksctl /usr/local/bin
-eksctl version
+---
+
+## 📹 Project Demo
+**Watch the live deployment and walkthrough of the project:**
+
+[![Watch the video](googleproject-thumbnail.png)](https://drive.google.com/file/d/1k_RDfrIGPMhVNENQNejR8mn8NhDZ-_Ch/view?usp=drive_link)
+
+*(Click the image above to watch the video)*
+
+---
+
+## 🏗️ Architecture
+
+### Architecture Flow
+The application follows a secure, decoupled traffic flow:
+
+`Internet` → `AWS ALB` → `K8s Frontend Service` → `K8s Backend Service` → `AWS RDS (Private)`
+
+### Data Flow Visualization
+```mermaid
+graph LR
+    User((Internet)) --> ALB(AWS Load Balancer)
+    ALB --> FE(Frontend Service)
+    FE --> BE(Backend Service)
+    BE --> DB[(AWS RDS MySQL)]
+    
+    subgraph "AWS EKS Cluster"
+    FE
+    BE
+    end
+    
+    subgraph "CI/CD & Observability"
+    Github --> Actions(GitHub Actions)
+    Actions --> ECR(AWS ECR)
+    ArgoCD --> EKS(EKS Sync)
+    Grafana
+    Kibana
+    end
 ```
 
-## Create EKS Cluster
+![Architecture Diagram](./assets/googlestore-architecture.png)
 
-``` bash
-eksctl create cluster --name google   --region ap-northeast-1   --node-type c7i-flex.large   --nodes-min 2   --nodes-max 2
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technologies |
+|----------|--------------|
+| **Cloud Infrastructure** | AWS (EKS, EC2, ECR, RDS, IAM) |
+| **Containerization** | Docker, Kubernetes (Pods, Services, Deployments) |
+| **CI/CD** | GitHub Actions (CI), ArgoCD (GitOps/CD) |
+| **Observability** | Grafana (Metrics), Kibana (Logs), Prometheus |
+| **Database** | AWS RDS (MySQL) |
+| **Frontend/Backend** | React.js / Node.js (Microservices) |
+
+---
+
+## 🚀 Key Features
+
+* **Microservices Architecture:** Decoupled frontend and backend deployed as separate pods for independent scaling.
+* **GitOps Deployment:** Full synchronization using ArgoCD; changes in Git reflect instantly in the cluster.
+* **Automated CI Pipelines:** GitHub Actions automatically builds and pushes Docker images to ECR on every commit.
+* **Resilient Data Management:** Stateful data managed via AWS RDS with private subnet isolation for security.
+* **Full Observability:** Real-time system metrics monitoring with Grafana and centralized logging via Kibana.
+* **High Availability:** Utilizes Kubernetes LoadBalancers and Horizontal Pod Autoscaling (HPA).
+
+---
+
+## ⚙️ Deployment Guide
+
+### Prerequisites
+* AWS Account with CLI configured
+* `kubectl` installed
+* `eksctl` (optional, for cluster creation)
+* Docker Desktop
+
+### 1. Infrastructure Setup
+Provision the EKS cluster and RDS database.
+```bash
+# Example command to create cluster
+eksctl create cluster --name google-store-cluster --region us-east-1 --nodegroup-name standard-workers --node-type t3.medium --nodes 2
 ```
 
-## Install kubectl
-
-``` bash
-curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-chmod +x ./kubectl
-sudo mv ./kubectl /usr/local/bin/kubectl
+### 2. Database Configuration
+Ensure your `app-secret` or Kubernetes Secrets are updated with your RDS endpoint.
+```bash
+kubectl create secret generic db-credentials \
+  --from-literal=username=admin \
+  --from-literal=password=yourpassword \
+  --from-literal=host=your-rds-endpoint
 ```
 
-## Install Git
-
-``` bash
-yum install git -y
+### 3. Deploying Microservices
+Apply the Kubernetes manifests.
+```bash
+kubectl apply -f k8s/backend-deployment.yaml
+kubectl apply -f k8s/frontend-deployment.yaml
 ```
 
-## Install Ingress-Nginx
-
-``` bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
-kubectl get pods -n ingress-nginx
-kubectl get svc -n ingress-nginx
+### 4. Setup Monitoring (Grafana & Kibana)
+Deploy the monitoring stack using Helm or manifests.
+```bash
+# Port forward to access Grafana locally
+kubectl port-forward svc/grafana 3000:80 -n monitoring
 ```
 
-## Install MariaDB
+---
 
-``` bash
-sudo yum update -y
-sudo dnf install -y mariadb105
-```
+## 🔄 CI/CD Workflow
 
-## MySQL Database Setup
+1.  **Code Commit:** Developer pushes code to GitHub.
+2.  **CI (GitHub Actions):** * Builds Docker Image.
+    * Runs Unit Tests.
+    * Pushes Image to AWS ECR.
+3.  **CD (ArgoCD):**
+    * Detects changes in the manifest repository.
+    * Syncs the EKS cluster to the desired state.
 
-``` sql
-CREATE DATABASE IF NOT EXISTS cloud;
-USE cloud;
-DROP TABLE IF EXISTS users;
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    full_name VARCHAR(150) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-exit
-```
+---
 
-## Install ArgoCD
+## 📸 Screenshots
 
-``` bash
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-kubectl get svc -n argocd
-```
+| Store Interface | Grafana Dashboard |
+|:---:|:---:|
+| ![Store](./screenshots/store.png) | ![Grafana](./screenshots/grafana.png) |
+| *Home Page* | *Metrics Monitoring* |
 
-## Create Namespace
+---
 
-``` bash
-kubectl create namespace google
-```
+### 👤 Author
+**Anirudh**
+*DevOps Engineer | Cloud Enthusiast*
 
-## Retrieve ArgoCD Password
-
-``` bash
-kubectl -n argocd get secret argocd-initial-admin-secret   -o jsonpath="{.data.password}" | base64 -d
-```
-
-------------------------------------------------------------------------
-
-# 📸 Architecture & Workflow Diagrams
-
-
-
-### Workflow Diagram
-
-![Workflow Diagram](https://i.ibb.co/t9WR8c8/drawing.png)
-
-####################
-- First create eks cluster with ebs csi driver add on and give role on add on
-- Create Eks clinet server and update the cluster 
-- give your account acces keey,seret key,git pat token,aws account id on your git hub repositry secrts and variables
-- install argocd cd and git ,mariadb onn eks server
-- initilize the database 
-- Clone the git repositry
-- switch to k8s-argocd
-- First apply backend
-- Next copy the backend loadbalancer url and paste it on front end main folder index.htm    (line no 711 and 712)
-
-- Next apply front end on K8s Argo  cd foldr
-- Next apply efk stack folder
-- Install grfana and promethous on cluster commnds given on repo grafana-prometheous
-- access the application with ingress lb url  
+[LinkedIn](https://www.linkedin.com/in/anirudh-trivedi-4414b9244/) | [GitHub](https://github.com/Ace12Anirudh)
